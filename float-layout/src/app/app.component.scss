@@ -1,0 +1,23 @@
+.app {
+  display: flex;
+  height: 100vh;
+  .svg {
+    flex: 4;
+  }
+  .detail {
+    flex: 1;
+    background-color: aliceblue;
+  }
+}
+
+circle {
+  fill: #05668D;
+  opacity: 0.6;
+  stroke-width: 2px;
+}
+
+line {
+  stroke: #05668D;
+  stroke-opacity: 0.3;
+  stroke-width: 2px;
+}
