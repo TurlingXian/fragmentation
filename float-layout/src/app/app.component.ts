@@ -6,7 +6,7 @@ import * as d3Chromatic from 'd3-scale-chromatic';
 import * as d3Force from 'd3-force';
 import * as d3Scale from 'd3-scale';
 import * as d3Zoom from 'd3-zoom';
-import { ChangeDetectorRef } from '@angular/core'; 
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-root',
@@ -39,7 +39,7 @@ export class AppComponent implements OnInit {
       {'source': 'application2', 'target': 'application3', 'value': 1, 'relation': ''},
       {'source': 'application3', 'target': 'application4', 'value': 1, 'relation': ''},
       {'source': 'application4', 'target': 'application5', 'value': 1, 'relation': ''},
-      {'source': 'application1', 'target': 'application5', 'value': 1, 'relation': ''},
+      {'source': 'application5', 'target': 'application1', 'value': 1, 'relation': ''},
       {'source': 'app1.data1', 'target': 'application1', 'value': 2, 'relation': '关系'},
       {'source': 'app1.data2', 'target': 'application1', 'value': 2, 'relation': '关系'},
       {'source': 'app1.data3', 'target': 'application1', 'value': 2, 'relation': '关系'},
@@ -130,6 +130,7 @@ export class AppComponent implements OnInit {
         .attr('fill', 'white')
         .text(d => d.relation);
 
+    const that = this;
     const node = svg.append('g')
         .attr('stroke', '#fff')
         .attr('stroke-width', 1.5)
@@ -142,11 +143,8 @@ export class AppComponent implements OnInit {
         })
         .attr('fill', (d, i) => this.color(i))
         .on('click', function(d, i) {
-          // console.log(d, i, d.value, d.id);
-          this.currentId = d.id;
-          console.log(this.currentId);
-          // this.changeDetectorRef.markForCheck();
-          // this.changeDetectorRef.detectChanges();
+          console.log(d.id, this, that);
+          that.chooseNode(d, i);
         })
         .call(this.drag(simulation));
 
@@ -212,10 +210,15 @@ export class AppComponent implements OnInit {
     console.log('links', links);
     return d3Force.forceSimulation(nodes)
         .force('link', d3Force.forceLink(links).id(d => d.id))
-        .force('link', d3Force.forceLink(links).distance(50))
-        .force('charge', d3Force.forceManyBody())
-        .force('center', d3Force.forceCenter());
+        // .force('link', d3Force.forceLink(links).distance(50))
+        .force('charge', d3Force.forceManyBody().strength(-60))
+        .force('center', d3Force.forceCenter())
+        .force('collide', d3Force.forceCollide(10).strength(0.1).iterations(5));
   }
 
+  chooseNode(d, i) {
+    this.currentId = d.id;
+    console.log(this.currentId);
+  }
 
 }
