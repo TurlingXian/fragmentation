@@ -1,7 +1,8 @@
 .app {
   display: flex;
   height: 100vh;
-  .svg {
+  background-color: #05668D;
+  #svg {
     flex: 4;
   }
   .detail {
@@ -10,14 +11,27 @@
   }
 }
 
-circle {
+.circle {
   fill: #05668D;
   opacity: 0.6;
   stroke-width: 2px;
 }
 
-line {
+.line {
   stroke: #05668D;
   stroke-opacity: 0.3;
   stroke-width: 2px;
+}
+
+.node-label {
+	pointer-events: none;
+  font: 10px sans-serif;
+	color: white;
+	text-anchor: middle;
+	font-weight: lighter;
+	-webkit-font-smoothing: antialiased;
+}
+
+#end-arrow {
+  fill: #88A;
 }

@@ -1,8 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import * as d3 from 'd3-selection';
-import * as d3Fetch from 'd3-Fetch';
+import * as d3Array from 'd3-array';
+import * as d3Drag from 'd3-drag';
 import * as d3Chromatic from 'd3-scale-chromatic';
 import * as d3Force from 'd3-force';
+import * as d3Scale from 'd3-scale';
+import * as d3Zoom from 'd3-zoom';
+import { ChangeDetectorRef } from '@angular/core'; 
 
 @Component({
   selector: 'app-root',
@@ -11,15 +15,55 @@ import * as d3Force from 'd3-force';
 })
 export class AppComponent implements OnInit {
 
-  data = d3Fetch.json('https://gist.githubusercontent.com/mbostock/4062045/raw/5916d145c8c048a6e3086915a6be464467391c62/miserables.json');
+  circleSize = 10;
+  currentId = '';
 
-  height = 600;
-  width = 600;
-  color;
-  scale;
+  data = {
+    'nodes': [
+      {'id': 'application1', 'group': 1, 'value': 3},
+      {'id': 'application2', 'group': 1, 'value': 0},
+      {'id': 'application3', 'group': 1, 'value': 0},
+      {'id': 'application4', 'group': 1, 'value': 4},
+      {'id': 'application5', 'group': 1, 'value': 1},
+      {'id': 'app1.data1', 'group': 2, 'value': 0},
+      {'id': 'app1.data2', 'group': 2, 'value': 0},
+      {'id': 'app1.data3', 'group': 2, 'value': 0},
+      {'id': 'app4.data1', 'group': 3, 'value': 0},
+      {'id': 'app4.data2', 'group': 3, 'value': 0},
+      {'id': 'app4.data3', 'group': 3, 'value': 0},
+      {'id': 'app4.data4', 'group': 3, 'value': 0},
+      {'id': 'app5.data1', 'group': 4, 'value': 0},
+    ],
+    'links': [
+      {'source': 'application1', 'target': 'application2', 'value': 1, 'relation': ''},
+      {'source': 'application2', 'target': 'application3', 'value': 1, 'relation': ''},
+      {'source': 'application3', 'target': 'application4', 'value': 1, 'relation': ''},
+      {'source': 'application4', 'target': 'application5', 'value': 1, 'relation': ''},
+      {'source': 'application1', 'target': 'application5', 'value': 1, 'relation': ''},
+      {'source': 'app1.data1', 'target': 'application1', 'value': 2, 'relation': '关系'},
+      {'source': 'app1.data2', 'target': 'application1', 'value': 2, 'relation': '关系'},
+      {'source': 'app1.data3', 'target': 'application1', 'value': 2, 'relation': '关系'},
+      {'source': 'app4.data1', 'target': 'application4', 'value': 2, 'relation': '关系'},
+      {'source': 'app4.data2', 'target': 'application4', 'value': 2, 'relation': '关系'},
+      {'source': 'app4.data3', 'target': 'application4', 'value': 2, 'relation': '关系'},
+      {'source': 'app4.data4', 'target': 'application4', 'value': 2, 'relation': '关系'},
+      {'source': 'app5.data1', 'target': 'application5', 'value': 2, 'relation': '关系'},
+    ]
+  };
 
-  constructor() {
+  height = 240;
+  width = 300;
+  color = d3Scale
+  .scaleOrdinal()
+  .domain(d3Array.range(this.data.nodes.length))
+  .range(d3Chromatic.schemeCategory10);
 
+  R = 88;
+
+
+  constructor(
+    private changeDetectorRef: ChangeDetectorRef
+  ) {
   }
 
   ngOnInit() {
@@ -27,17 +71,48 @@ export class AppComponent implements OnInit {
   }
 
   chartInit() {
-
-    this.color = {
-      // const scale = d3.scaleOrdinal(d3.schemeCategory10);
-      // return d => scale(d.group);
-    };
+    console.log(this.data);
     const links = this.data.links.map(d => Object.create(d));
     const nodes = this.data.nodes.map(d => Object.create(d));
     const simulation = this.forceSimulation(nodes, links).on('tick', ticked);
+    console.log('simulation', simulation);
 
-    const svg = d3.select(DOM.svg(this.width, this.height))
-        .attr('viewBox', [-this.width / 2, -this.height / 2, this.width, this.height]);
+    const svg = d3.select('#svg').append('svg')
+        .attr('viewBox', [-this.width / 2, -this.height / 2, this.width, this.height])
+        .call(d3Zoom.zoom().on('zoom', function() {
+          svg.attr('transform', d3.event.transform);
+        })
+        .scaleExtent([0.5, 3]));
+
+    // add defs-marker
+    // add defs-markers
+    svg.append('svg:defs').selectAll('marker')
+    .data([{id: 'end-arrow', opacity: 1}, {id: 'end-arrow-fade', opacity: 0.075}])
+    .enter().append('marker')
+    .attr('id', function(d) { return d.id; })
+    .attr('viewBox', '0 0 10 10')
+    .attr('refX', 2 + this.R)
+    .attr('refY', 5)
+    .attr('markerWidth', 4)
+    .attr('markerHeight', 4)
+    .attr('orient', 'auto')
+    .append('svg:path')
+    .attr('d', 'M0,0 L0,10 L10,5 z')
+    .style('opacity', function(d) { return d.opacity; });
+
+    // phantom marker
+    svg.append('svg:defs')
+    .append('svg:marker')
+    .attr('id', 'end-arrow-phantom')
+    .attr('viewBox', '0 0 10 10')
+    .attr('refX', 2 + this.R)
+    .attr('refY', 5)
+    .attr('markerWidth', 4)
+    .attr('markerHeight', 4)
+    .attr('orient', 'auto')
+    .attr('fill', '#EEE')
+    .append('svg:path')
+    .attr('d', 'M0,0 L0,10 L10,5 z');
 
     const link = svg.append('g')
         .attr('stroke', '#999')
@@ -45,7 +120,15 @@ export class AppComponent implements OnInit {
         .selectAll('line')
         .data(links)
         .enter().append('line')
-        .attr('stroke-width', d => Math.sqrt(d.value));
+        .attr('stroke-width', d => Math.pow((1 / d.value), 0.5))
+        .attr('marker-end', 'url(#end-arrow)');
+
+    const linksText = svg.selectAll('text')
+        .data(links)
+        .enter().append('text')
+        .style('font-size', '6px')
+        .attr('fill', 'white')
+        .text(d => d.relation);
 
     const node = svg.append('g')
         .attr('stroke', '#fff')
@@ -53,12 +136,30 @@ export class AppComponent implements OnInit {
         .selectAll('circle')
         .data(nodes)
         .enter().append('circle')
-        .attr('r', 5)
-        .attr('fill', this.color)
+        .attr('r', function(d) {
+          console.log(d, d.value);
+          return (d.value + 1) * 5;
+        })
+        .attr('fill', (d, i) => this.color(i))
+        .on('click', function(d, i) {
+          // console.log(d, i, d.value, d.id);
+          this.currentId = d.id;
+          console.log(this.currentId);
+          // this.changeDetectorRef.markForCheck();
+          // this.changeDetectorRef.detectChanges();
+        })
         .call(this.drag(simulation));
 
-    node.append('title')
-        .text(d => d.id);
+    const texts = svg.selectAll('text.node-label')
+        .data(nodes)
+        .enter().append('text')
+        // .attr('class', 'node-label')
+        .style('font-size', '8px')
+        .attr('fill', 'white')
+        .attr('x', -10)
+        .attr('y', -20)
+        .attr('dy', 10)
+        .text(function(d) { return d.id; });
 
     function ticked() {
       link
@@ -70,6 +171,13 @@ export class AppComponent implements OnInit {
       node
           .attr('cx', d => d.x)
           .attr('cy', d => d.y);
+
+      texts
+          .attr('transform', d => 'translate(' + d.x + ',' + d.y + ')');
+
+      linksText
+          .attr('x', d => (d.source.x + d.target.x) / 2 )
+          .attr('y', d => (d.source.y + d.target.y) / 2 );
     }
 
     return svg.node();
@@ -94,19 +202,20 @@ export class AppComponent implements OnInit {
       d.fy = null;
     }
 
-    return d3.drag()
+    return d3Drag.drag()
         .on('start', dragstarted)
         .on('drag', dragged)
         .on('end', dragended);
   }
 
   forceSimulation(nodes, links) {
-    return d3.forceSimulation(nodes)
-        .force('link', d3.forceLink(links).id(d => d.id))
-        .force('charge', d3.forceManyBody())
-        .force('center', d3.forceCenter());
+    console.log('links', links);
+    return d3Force.forceSimulation(nodes)
+        .force('link', d3Force.forceLink(links).id(d => d.id))
+        .force('link', d3Force.forceLink(links).distance(50))
+        .force('charge', d3Force.forceManyBody())
+        .force('center', d3Force.forceCenter());
   }
-
 
 
 }
