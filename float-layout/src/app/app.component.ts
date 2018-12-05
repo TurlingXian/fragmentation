@@ -6,7 +6,6 @@ import * as d3Chromatic from 'd3-scale-chromatic';
 import * as d3Force from 'd3-force';
 import * as d3Scale from 'd3-scale';
 import * as d3Zoom from 'd3-zoom';
-import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-root',
@@ -62,7 +61,6 @@ export class AppComponent implements OnInit {
 
 
   constructor(
-    private changeDetectorRef: ChangeDetectorRef
   ) {
   }
 
